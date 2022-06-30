@@ -14,3 +14,71 @@ http://api.openweathermap.org/data/2.5/forecast/daily?q=city&cnt=1&units=metric&
  21-09-2020 20.75 18.08
  22-09-2020 20.96 17.47
   * Дод. надати користувачеві вибір міста та кількості днів, а також додати колонку Температура вночі"""
+import csv
+from datetime import datetime
+
+import requests
+from requests import Response
+
+from task_2 import get_round_off_number
+
+
+def get_response_url_in_json(url: str) -> Response:
+    return requests.get(url).json()
+
+
+def create_dates(response: Response) -> list:
+    ret = []
+    for date in response['list']:
+        ret.append(datetime.fromtimestamp(date['dt']).strftime("%d-%m-%Y"))
+    return ret
+
+
+def create_temperatures(response: Response, key: str) -> list:
+    ret = []
+    for temp in response['list']:
+        ret.append(temp['temp'][key])
+    return ret
+
+
+def create_average_temperatures_two_elem(response: Response, key_1: str, key_2: str) -> list:
+    temp_1 = create_temperatures(response, key_1)
+    temp_2 = create_temperatures(response, key_2)
+    ret = []
+    for t1, t2 in zip(temp_1, temp_2):
+        ret.append(get_round_off_number((t1 + t2) / 2))
+    return ret
+
+
+def create_temperatures_data(dates: list, t_averages: list, t_days: list, t_nights: list) -> list:
+    ret = []
+    for date, t_average, t_day, t_night in zip(dates, t_averages, t_days, t_nights):
+        ret.append({'date': date, 'temp_average': t_average, 'temp_day': t_day, 'temp_night': t_night})
+    return ret
+
+
+def save_file(data: list):
+    with open('file.txt', 'w') as f:
+        writer = csv.DictWriter(f, fieldnames=data[0].keys(), )
+        writer.writeheader()
+        for elem_dict in data:
+            writer.writerow(elem_dict)
+
+
+def main():
+    some_url = f'http://api.openweathermap.org/data/2.5/forecast/daily?q=city&cnt=5&units=metric&appid=f9ada9efec6a3934dad5f30068fdcbb8'
+
+    site_response = get_response_url_in_json(some_url)
+    dates_list = create_dates(site_response)
+    temp_average = create_average_temperatures_two_elem(site_response, 'min', 'max')
+    temp_days = create_temperatures(site_response, 'day')
+    temp_night = create_temperatures(site_response, 'night')
+
+    print(dates_list, temp_average, temp_days, temp_night)
+
+    temperatures_data = create_temperatures_data(dates_list, temp_average, temp_days, temp_night)
+    save_file(temperatures_data)
+
+
+if __name__ == '__main__':
+    main()
