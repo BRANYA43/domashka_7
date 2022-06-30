@@ -23,6 +23,16 @@ from requests import Response
 from task_2 import get_round_off_number
 
 
+def create_name_file(city: str, count_days: int) -> str:
+    ret = f'{datetime.now().strftime("%d-%m-%Y")} {city.capitalize()} {count_days} days weather forecast.txt'
+    return ret.replace(' ', '-')
+
+
+def set_url(city: str, count_day: int) -> str:
+    return f'http://api.openweathermap.org/data/2.5/forecast/daily?q={city}&cnt={count_day}' \
+           f'&units=metric&appid=f9ada9efec6a3934dad5f30068fdcbb8'
+
+
 def get_response_url_in_json(url: str) -> Response:
     return requests.get(url).json()
 
@@ -57,27 +67,30 @@ def create_temperatures_data(dates: list, t_averages: list, t_days: list, t_nigh
     return ret
 
 
-def save_file(data: list):
-    with open('file.txt', 'w') as f:
-        writer = csv.DictWriter(f, fieldnames=data[0].keys(), )
+def save_file(name_file: str, data: list):
+    with open(name_file, 'w', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=data[0].keys(), delimiter=' ')
         writer.writeheader()
         for elem_dict in data:
             writer.writerow(elem_dict)
 
 
 def main():
-    some_url = f'http://api.openweathermap.org/data/2.5/forecast/daily?q=city&cnt=5&units=metric&appid=f9ada9efec6a3934dad5f30068fdcbb8'
+    some_city = 'odesa'
+    count_d = 5
+    some_url = set_url(some_city, count_d)
+    some_name_file = create_name_file(some_city, count_d)
 
     site_response = get_response_url_in_json(some_url)
+
     dates_list = create_dates(site_response)
+
     temp_average = create_average_temperatures_two_elem(site_response, 'min', 'max')
     temp_days = create_temperatures(site_response, 'day')
     temp_night = create_temperatures(site_response, 'night')
-
-    print(dates_list, temp_average, temp_days, temp_night)
-
     temperatures_data = create_temperatures_data(dates_list, temp_average, temp_days, temp_night)
-    save_file(temperatures_data)
+
+    save_file(some_name_file, temperatures_data)
 
 
 if __name__ == '__main__':
