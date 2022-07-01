@@ -23,6 +23,13 @@ from requests import Response
 from task_2 import get_round_off_number
 
 
+def get_input_number(message: str) -> int:
+    ret = ''
+    while not ret.isdigit():
+        ret = input(message)
+    return int(ret)
+
+
 def create_name_file(city: str, count_days: int) -> str:
     ret = f'{datetime.now().strftime("%d-%m-%Y")} {city.capitalize()} {count_days} days weather forecast.txt'
     return ret.replace(' ', '-')
@@ -47,7 +54,7 @@ def create_dates(response: Response) -> list:
 def create_temperatures(response: Response, key: str) -> list:
     ret = []
     for temp in response['list']:
-        ret.append(temp['temp'][key])
+        ret.append(get_round_off_number(temp['temp'][key]))
     return ret
 
 
@@ -63,28 +70,26 @@ def create_average_temperatures_two_elem(response: Response, key_1: str, key_2: 
 def create_temperatures_data(dates: list, t_averages: list, t_days: list, t_nights: list) -> list:
     ret = []
     for date, t_average, t_day, t_night in zip(dates, t_averages, t_days, t_nights):
-        ret.append({'date': date, 'temp_average': t_average, 'temp_day': t_day, 'temp_night': t_night})
+        ret.append({'date': date, 'average': t_average, 'day': t_day, 'night': t_night})
     return ret
 
 
 def save_file(name_file: str, data: list):
     with open(name_file, 'w', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=data[0].keys(), delimiter=' ')
+        writer = csv.DictWriter(f, fieldnames=data[0].keys(), delimiter='\t')
         writer.writeheader()
         for elem_dict in data:
             writer.writerow(elem_dict)
 
 
 def main():
-    some_city = 'odesa'
-    count_d = 5
-    some_url = set_url(some_city, count_d)
-    some_name_file = create_name_file(some_city, count_d)
+    some_city = input('Введіть місто: ')
+    count_day = get_input_number('Введіть кількість днів: ')
 
+    some_url = set_url(some_city, count_day)
+    some_name_file = create_name_file(some_city, count_day)
     site_response = get_response_url_in_json(some_url)
-
     dates_list = create_dates(site_response)
-
     temp_average = create_average_temperatures_two_elem(site_response, 'min', 'max')
     temp_days = create_temperatures(site_response, 'day')
     temp_night = create_temperatures(site_response, 'night')
