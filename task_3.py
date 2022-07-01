@@ -35,13 +35,9 @@ def create_name_file(city: str, count_days: int) -> str:
     return ret.replace(' ', '-')
 
 
-def set_url(city: str, count_day: int) -> str:
-    return f'http://api.openweathermap.org/data/2.5/forecast/daily?q={city}&cnt={count_day}' \
-           f'&units=metric&appid=f9ada9efec6a3934dad5f30068fdcbb8'
-
-
-def get_response_url_in_json(url: str) -> Response:
-    return requests.get(url).json()
+def get_response_url_in_json(url: str, city, count_day, key) -> Response:
+    params = {'q': city, 'cnt': f'{count_day}', 'units': 'metric', 'appid': key}
+    return requests.get(url, params=params).json()
 
 
 def create_dates(response: Response) -> list:
@@ -85,10 +81,10 @@ def save_file(name_file: str, data: list):
 def main():
     some_city = input('Введіть місто: ')
     count_day = get_input_number('Введіть кількість днів: ')
-
-    some_url = set_url(some_city, count_day)
+    key = 'f9ada9efec6a3934dad5f30068fdcbb8'
+    some_url = 'http://api.openweathermap.org/data/2.5/forecast/daily'
     some_name_file = create_name_file(some_city, count_day)
-    site_response = get_response_url_in_json(some_url)
+    site_response = get_response_url_in_json(some_url, some_city, count_day, key)
     dates_list = create_dates(site_response)
     temp_average = create_average_temperatures_two_elem(site_response, 'min', 'max')
     temp_days = create_temperatures(site_response, 'day')
