@@ -54,7 +54,7 @@ def create_dates(response: Response) -> list:
 def create_temperatures(response: Response, key: str) -> list:
     ret = []
     for temp in response['list']:
-        ret.append(get_round_off_number(temp['temp'][key]))
+        ret.append(float(temp['temp'][key]))
     return ret
 
 
